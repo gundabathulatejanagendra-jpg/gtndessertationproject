@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Manage Issues - CityPortal{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-list-alt"></i> All Issues</h1>
+        <p>{{ issues|length }} issue(s) found</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card filter-card">
+    <form method="GET" action="{{ url_for('admin_issues') }}" class="filter-form">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Search</label>
+                <input type="text" name="search" value="{{ search }}" placeholder="Search by title...">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-traffic-light"></i> Status</label>
+                <select name="status">
+                    <option value="">All Statuses</option>
+                    {% for s in ['Submitted','Under Review','In Progress','Resolved','Closed'] %}
+                    <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-tag"></i> Category</label>
+                <select name="category">
+                    <option value="">All Categories</option>
+                    {% for c in ['Pothole','Streetlight','Garbage','Waterlogging','Other'] %}
+                    <option value="{{ c }}" {% if category_filter == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-flag"></i> Priority</label>
+                <select name="priority">
+                    <option value="">All Priorities</option>
+                    {% for p in ['Low','Medium','High','Critical'] %}
+                    <option value="{{ p }}" {% if priority_filter == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group filter-actions">
+                <button type="submit" class="btn-primary"><i class="fas fa-filter"></i> Filter</button>
+                <a href="{{ url_for('admin_issues') }}" class="btn-secondary"><i class="fas fa-redo"></i> Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    {% if issues %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Resident</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr {% if (now - issue.created_at).days >= 7 and issue.status not in ['Resolved','Closed'] %}class="overdue-row"{% endif %}>
+                    <td>{{ issue.id }}</td>
+                    <td><strong>{{ issue.title[:35] }}{% if issue.title|length > 35 %}...{% endif %}</strong>
+                        {% if (now - issue.created_at).days >= 7 and issue.status not in ['Resolved','Closed'] %}
+                        <span class="overdue-tag"><i class="fas fa-fire"></i> Overdue</span>{% endif %}
+                    </td>
+                    <td>{{ issue.resident.name }}</td>
+                    <td><span class="cat-badge cat-{{ issue.category | lower }}">{{ issue.category }}</span></td>
+                    <td>{{ issue.location_address[:25] }}{% if issue.location_address|length > 25 %}...{% endif %}</td>
+                    <td><span class="priority-badge priority-{{ issue.priority | lower }}">{{ issue.priority }}</span></td>
+                    <td><span class="status-badge status-{{ issue.status | lower | replace(' ', '-') }}">{{ issue.status }}</span></td>
+                    <td>{{ issue.created_at.strftime('%d %b %Y') }}</td>
+                    <td><a href="{{ url_for('admin_issue_detail', issue_id=issue.id) }}" class="btn-sm"><i class="fas fa-edit"></i> Manage</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox empty-icon"></i>
+        <h3>No issues found</h3>
+        <p>Try adjusting your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

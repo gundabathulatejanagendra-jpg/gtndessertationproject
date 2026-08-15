@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - CityPortal{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header admin-header">
+    <div>
+        <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+        <p>Municipal Officer Control Panel</p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('admin_issues') }}" class="btn-primary"><i class="fas fa-list-alt"></i> Manage Issues</a>
+        <a href="{{ url_for('export_pdf') }}" class="btn-secondary"><i class="fas fa-file-pdf"></i> Export PDF</a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="stats-row">
+    <div class="stat-box">
+        <i class="fas fa-clipboard-list stat-box-icon blue"></i>
+        <div class="stat-box-num">{{ total }}</div>
+        <div class="stat-box-label">Total Issues</div>
+    </div>
+    <div class="stat-box">
+        <i class="fas fa-inbox stat-box-icon orange"></i>
+        <div class="stat-box-num">{{ submitted }}</div>
+        <div class="stat-box-label">Newly Submitted</div>
+    </div>
+    <div class="stat-box">
+        <i class="fas fa-tools stat-box-icon yellow"></i>
+        <div class="stat-box-num">{{ in_progress }}</div>
+        <div class="stat-box-label">In Progress</div>
+    </div>
+    <div class="stat-box">
+        <i class="fas fa-check-double stat-box-icon green"></i>
+        <div class="stat-box-num">{{ resolved }}</div>
+        <div class="stat-box-label">Resolved</div>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-clock"></i> Recent Issues</h2>
+            <a href="{{ url_for('admin_issues') }}" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in recent %}
+                    <tr {% if (now - issue.created_at).days >= 7 and issue.status not in ['Resolved','Closed'] %}class="overdue-row"{% endif %}>
+                        <td>{{ issue.id }}</td>
+                        <td><strong>{{ issue.title[:40] }}{% if issue.title|length > 40 %}...{% endif %}</strong></td>
+                        <td><span class="cat-badge cat-{{ issue.category | lower }}">{{ issue.category }}</span></td>
+                        <td><span class="priority-badge priority-{{ issue.priority | lower }}">{{ issue.priority }}</span></td>
+                        <td><span class="status-badge status-{{ issue.status | lower | replace(' ', '-') }}">{{ issue.status }}</span></td>
+                        <td>{{ issue.created_at.strftime('%d %b') }}</td>
+                        <td><a href="{{ url_for('admin_issue_detail', issue_id=issue.id) }}" class="btn-sm"><i class="fas fa-edit"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="side-cards">
+        <div class="card info-card">
+            <div class="card-header"><h2><i class="fas fa-exclamation-triangle"></i> Alerts</h2></div>
+            <div class="info-item red">
+                <i class="fas fa-fire"></i>
+                <div>
+                    <strong>{{ overdue }}</strong>
+                    <span>Overdue Issues (7+ days)</span>
+                </div>
+            </div>
+            <div class="info-item green">
+                <i class="fas fa-star"></i>
+                <div>
+                    <strong>{{ avg_feedback }} / 5</strong>
+                    <span>Average Feedback Rating</span>
+                </div>
+            </div>
+            <a href="{{ url_for('admin_issues') }}?status=Submitted" class="btn-primary full-btn"><i class="fas fa-inbox"></i> Review New Issues</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
