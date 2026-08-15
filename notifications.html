@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Notifications - CityPortal{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resident.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-bell"></i> Notifications</h1>
+        <p>Updates on your reported issues</p>
+    </div>
+</div>
+
+<div class="card">
+    {% if notifs %}
+    <div class="notif-list">
+        {% for n in notifs %}
+        <div class="notif-item">
+            <i class="fas fa-info-circle notif-icon"></i>
+            <div class="notif-text">
+                <p>{{ n.message }}</p>
+                <small><i class="fas fa-clock"></i> {{ n.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-bell-slash empty-icon"></i>
+        <h3>No notifications yet</h3>
+        <p>You'll be notified when your issue status changes.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,101 +1,95 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard - CityPortal{% endblock %}
+{% block title %}My Dashboard - CityPortal{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resident.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="page-header admin-header">
+<div class="page-header resident-header">
     <div>
-        <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
-        <p>Municipal Officer Control Panel</p>
+        <h1><i class="fas fa-home"></i> My Dashboard</h1>
+        <p>Welcome back, <strong>{{ current_user.name }}</strong> &mdash; {{ current_user.area or 'Resident' }}</p>
     </div>
-    <div class="header-actions">
-        <a href="{{ url_for('admin_issues') }}" class="btn-primary"><i class="fas fa-list-alt"></i> Manage Issues</a>
-        <a href="{{ url_for('export_pdf') }}" class="btn-secondary"><i class="fas fa-file-pdf"></i> Export PDF</a>
-    </div>
+    <a href="{{ url_for('report_issue') }}" class="btn-primary"><i class="fas fa-plus"></i> Report New Issue</a>
 </div>
 
-<!-- Summary Cards -->
+<!-- Stats -->
 <div class="stats-row">
     <div class="stat-box">
-        <i class="fas fa-clipboard-list stat-box-icon blue"></i>
+        <i class="fas fa-clipboard-list stat-box-icon"></i>
         <div class="stat-box-num">{{ total }}</div>
-        <div class="stat-box-label">Total Issues</div>
+        <div class="stat-box-label">Total Reported</div>
     </div>
     <div class="stat-box">
-        <i class="fas fa-inbox stat-box-icon orange"></i>
-        <div class="stat-box-num">{{ submitted }}</div>
-        <div class="stat-box-label">Newly Submitted</div>
+        <i class="fas fa-hourglass-half stat-box-icon orange"></i>
+        <div class="stat-box-num">{{ open_issues }}</div>
+        <div class="stat-box-label">Open Issues</div>
     </div>
     <div class="stat-box">
-        <i class="fas fa-tools stat-box-icon yellow"></i>
-        <div class="stat-box-num">{{ in_progress }}</div>
-        <div class="stat-box-label">In Progress</div>
-    </div>
-    <div class="stat-box">
-        <i class="fas fa-check-double stat-box-icon green"></i>
+        <i class="fas fa-check-circle stat-box-icon green"></i>
         <div class="stat-box-num">{{ resolved }}</div>
         <div class="stat-box-label">Resolved</div>
     </div>
+    <div class="stat-box">
+        <i class="fas fa-bell stat-box-icon blue"></i>
+        <div class="stat-box-num">{{ unread }}</div>
+        <div class="stat-box-label">New Alerts</div>
+    </div>
 </div>
 
-<div class="admin-grid">
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-clock"></i> Recent Issues</h2>
-            <a href="{{ url_for('admin_issues') }}" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for issue in recent %}
-                    <tr {% if (now - issue.created_at).days >= 7 and issue.status not in ['Resolved','Closed'] %}class="overdue-row"{% endif %}>
-                        <td>{{ issue.id }}</td>
-                        <td><strong>{{ issue.title[:40] }}{% if issue.title|length > 40 %}...{% endif %}</strong></td>
-                        <td><span class="cat-badge cat-{{ issue.category | lower }}">{{ issue.category }}</span></td>
-                        <td><span class="priority-badge priority-{{ issue.priority | lower }}">{{ issue.priority }}</span></td>
-                        <td><span class="status-badge status-{{ issue.status | lower | replace(' ', '-') }}">{{ issue.status }}</span></td>
-                        <td>{{ issue.created_at.strftime('%d %b') }}</td>
-                        <td><a href="{{ url_for('admin_issue_detail', issue_id=issue.id) }}" class="btn-sm"><i class="fas fa-edit"></i></a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- Issues Table -->
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-list"></i> My Reported Issues</h2>
     </div>
-
-    <div class="side-cards">
-        <div class="card info-card">
-            <div class="card-header"><h2><i class="fas fa-exclamation-triangle"></i> Alerts</h2></div>
-            <div class="info-item red">
-                <i class="fas fa-fire"></i>
-                <div>
-                    <strong>{{ overdue }}</strong>
-                    <span>Overdue Issues (7+ days)</span>
-                </div>
-            </div>
-            <div class="info-item green">
-                <i class="fas fa-star"></i>
-                <div>
-                    <strong>{{ avg_feedback }} / 5</strong>
-                    <span>Average Feedback Rating</span>
-                </div>
-            </div>
-            <a href="{{ url_for('admin_issues') }}?status=Submitted" class="btn-primary full-btn"><i class="fas fa-inbox"></i> Review New Issues</a>
-        </div>
-
+    {% if issues %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td>{{ issue.id }}</td>
+                    <td><strong>{{ issue.title }}</strong></td>
+                    <td>
+                        <span class="cat-badge cat-{{ issue.category | lower }}">
+                            <i class="fas {% if issue.category == 'Pothole' %}fa-road{% elif issue.category == 'Streetlight' %}fa-lightbulb{% elif issue.category == 'Garbage' %}fa-trash{% elif issue.category == 'Waterlogging' %}fa-water{% else %}fa-ellipsis-h{% endif %}"></i>
+                            {{ issue.category }}
+                        </span>
+                    </td>
+                    <td>{{ issue.location_address[:30] }}{% if issue.location_address|length > 30 %}...{% endif %}</td>
+                    <td><span class="priority-badge priority-{{ issue.priority | lower }}">{{ issue.priority }}</span></td>
+                    <td><span class="status-badge status-{{ issue.status | lower | replace(' ', '-') }}">{{ issue.status }}</span></td>
+                    <td>{{ issue.created_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('resident_issue_detail', issue_id=issue.id) }}" class="btn-sm"><i class="fas fa-eye"></i> View</a>
+                        {% if issue.status in ['Resolved'] and not issue.feedback %}
+                        <a href="{{ url_for('submit_feedback', issue_id=issue.id) }}" class="btn-sm btn-green"><i class="fas fa-star"></i> Feedback</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list empty-icon"></i>
+        <h3>No issues reported yet</h3>
+        <p>Report your first community issue to get started.</p>
+        <a href="{{ url_for('report_issue') }}" class="btn-primary"><i class="fas fa-plus"></i> Report an Issue</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

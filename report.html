@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Report Issue - CityPortal{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resident.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-plus-circle"></i> Report an Issue</h1>
+        <p>Fill in the details below to submit your community complaint</p>
+    </div>
+    <a href="{{ url_for('resident_dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{{ url_for('report_issue') }}" enctype="multipart/form-data" id="reportForm">
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Issue Details</h3>
+            <div class="form-group">
+                <label><i class="fas fa-heading"></i> Issue Title <span class="req">*</span></label>
+                <input type="text" name="title" placeholder="e.g. Large pothole on Main Street" required maxlength="200">
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Category <span class="req">*</span></label>
+                    <select name="category" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="Pothole"><i class="fas fa-road"></i> Pothole</option>
+                        <option value="Streetlight">Streetlight</option>
+                        <option value="Garbage">Garbage</option>
+                        <option value="Waterlogging">Waterlogging</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Location / Address <span class="req">*</span></label>
+                    <input type="text" name="location" placeholder="e.g. 12 Park Street, near bus stop" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-align-left"></i> Description <span class="req">*</span></label>
+                <textarea name="description" rows="5" placeholder="Describe the issue in detail..." required></textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-camera"></i> Photo (Optional)</h3>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p>Click or drag an image here</p>
+                <small>PNG, JPG, JPEG, GIF — Max 5MB</small>
+                <input type="file" name="photo" id="photoInput" accept=".png,.jpg,.jpeg,.gif" onchange="previewPhoto(this)">
+            </div>
+            <div id="photoPreview" style="display:none;">
+                <img id="previewImg" src="" alt="Preview">
+                <button type="button" onclick="clearPhoto()" class="btn-remove"><i class="fas fa-times"></i> Remove</button>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary btn-large"><i class="fas fa-paper-plane"></i> Submit Issue</button>
+            <a href="{{ url_for('resident_dashboard') }}" class="btn-secondary btn-large"><i class="fas fa-times"></i> Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/resident.js') }}"></script>
+{% endblock %}
